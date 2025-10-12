@@ -92,14 +92,14 @@ def hasSameLetterMappingSpanish(a):
 
 
 def get3x3Key():
-    f = open("3x3hillwords.txt", "r")
+    f = open("text/3x3hillwords.txt", "r")
     for i in range(0, random.randint(0, 4900)):
         f.readline()
     return f.readline().strip().upper()
 
 
 def get2x2Key():
-    f = open("2x2hillwords.txt", "r")
+    f = open("text/2x2hillwords.txt", "r")
     for i in range(0, random.randint(0, 490)):
         f.readline()
     return f.readline().strip().upper()
@@ -165,7 +165,7 @@ def genMapping():
 
 
 def genQuoteLength(min, max):
-    l = open("quotes.txt", "r", encoding="utf-8").read().split('\n')
+    l = open("text/quotes.txt", "r", encoding="utf-8").read().split('\n')
     random.shuffle(l)
     loc = 0
     while 1:
@@ -175,7 +175,7 @@ def genQuoteLength(min, max):
 
 
 def getRandWord(min, max):
-    f = open("words.txt", "r")
+    f = open("text/words.txt", "r")
     for i in range(random.randint(0, 9000)):
         f.readline()
     r = ""
@@ -185,7 +185,7 @@ def getRandWord(min, max):
 
 
 def genSpanishQuoteLength(min, max):
-    l = open("spanishquotes.txt", "r", encoding="windows-1252").read().split('\n')
+    l = open("text/spanishquotes.txt", "r", encoding="windows-1252").read().split('\n')
     random.shuffle(l)
     loc = 0
     while 1:
@@ -395,7 +395,7 @@ def genProblem(type, num):
 
             words = []
 
-            l = open("5letterwords.txt", "r", encoding="utf-8").read().split('\n')
+            l = open("text/5letterwords.txt", "r", encoding="utf-8").read().split('\n')
             for bacon in quote_bacon:
                 # s = specialCase(mapping, bacon)
                 # if s:
@@ -591,12 +591,22 @@ elif problems_string.lower() == "every":
 
 problems_string = problems_string.split(" ")
 
-problems = []
-for i in range(len(problems_string)):
-    problems.append([int(problems_string[i][:-1]), problems_string[i][-1:]])
-    # list of lists, first element is quantity, second is cipher letter
+print("\n\n")
 
-test = genTest(test_title, problems)
 
-with open(f"jsons\\{test_title}.json", "w") as f:
-    json.dump(test, f)
+try:
+    problems = []
+    for i in range(len(problems_string)):
+        problems.append([int(problems_string[i][:-1]), problems_string[i][-1:]])
+        # list of lists, first element is quantity, second is cipher letter
+
+    test = genTest(test_title, problems)
+
+    with open(f"jsons\\{test_title}.json", "w") as f:
+        json.dump(test, f)
+
+    print("json successfully generated.")
+
+except:
+    print("try again dumbo.")
+print("\n")
