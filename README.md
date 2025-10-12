@@ -11,7 +11,9 @@ A json maker for problem generation via [toebes.com](https://toebes.com/codebust
 1. Open the Terminal app
 
 2. Navigate to wherever you want to store this project. I recommend Documents. 
-`cd Documents`
+```
+cd Documents
+```
 
 3. Clone this repository
 ```
@@ -20,7 +22,9 @@ cd toebees
 ```
 
 4. Check that you have Python 3 installed
-`python --version`
+```
+python --version
+```
 
 5. Install packages
 ```
@@ -28,7 +32,9 @@ pip install json
 pip install random
 ```
 6. Run it! There are a couple presets you can use, otherwise make your test following the format
-`python main.py`
+```
+python main.py
+```
 
 Note: If it's ever taking like over 5 seconds to generate (cause you requested 1000 baconians), you can exit the program with Ctrl+C
 
