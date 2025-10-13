@@ -55,5 +55,9 @@ idk google it, or if you're hopelessly lost email lwangx26@gmail.com. please don
 ## To-Do (for me)
 | Status | Task |
 | :---: | :------  |
-|❌      | task1 |
-|❌      | task2odskfpokfopd |
+|❌      | update generation - patristos must be encoded with K1 or K2 |
+|❌      | upgdate generation - xenocrypts must be encoded with K1 or K2 |
+|❌      | update generation - cryptanalysis of the Nihilist Cipher with a “crib” that is no shorter than double than the length of the keyword used |
+|❌      | add new cipher - 5x5 Checkerboard Cipher decode |
+|❌      | add new cipher - 5x5 Checkerboard Cipher cryptanalysis |
+
