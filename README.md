@@ -34,15 +34,15 @@ cd toebees
 ```
 
 
-**4.** Check that you have Python 3 installed; if either of the following lines work, you're good
+**4.** Check that you have Python 3 installed; if either of the following lines output "Python 3.x.x", you're good
 
-`python --version #(make sure this outputs version Python 3.x.x)`    or    `python3 --version`
+`python --version`    or    `python3 --version`
 
-If neither worked, download the release for your operating system from [here](https://www.python.org/downloads/).
+If neither did, download the release for your operating system from [here](https://www.python.org/downloads/).
 
 
 
-**5.** Run it! There are a couple presets you can use, otherwise make your test following the given format
+**5.** Run it! There are a couple presets you can use, otherwise make your test following the given format. 
 
 `python main.py`    or    `python3 main.py`
 
