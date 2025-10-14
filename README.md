@@ -63,7 +63,7 @@ Click 'Randomize Order' on the top left if you wish to randomize.
 **9.** Save as PDF > email it to yourself using your school gmail account > print it out during 5th period > piss off Mrs. Dudley for using all the printer ink.
 ## Support
 
-idk google it, or if you're hopelessly lost email lwangx26@gmail.com. please don't ask to add new ciphers, i hate coding
+lwangx26@gmail.com
 
 
 ## To-Do (for me)
