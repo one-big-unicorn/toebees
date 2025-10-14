@@ -74,4 +74,6 @@ lwangx26@gmail.com
 |❌      | update generation - cryptanalysis of the Nihilist Cipher with a “crib” that is no shorter than double than the length of the keyword used |
 |❌      | add new cipher - 5x5 Checkerboard Cipher decode |
 |❌      | add new cipher - 5x5 Checkerboard Cipher cryptanalysis |
+|❌      | update README - instructions for generating cryptarithms |
+
 
