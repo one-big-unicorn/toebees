@@ -2,6 +2,7 @@
 # toebees
 
 A json maker for problem generation via [toebes.com](https://toebes.com/codebusters/) for Science Olympiad 🤮🤮🤮 Codebusters Event 😃😃😃
+*Last Updated for the 2026 Season*
 
 
 
@@ -49,7 +50,8 @@ Click 'Randomize Order' on the top left if you wish to randomize.
 10. Save as PDF > email it to yourself using your school gmail account > print it out during 5th period > piss off Mrs. Dudley for using all the printer ink.
 ## Support
 
-idk google it, or if you're hopelessly lost email lwangx26@gmail.com. please don't ask to add new ciphers, i hate coding
+Email: lwangx26@gmail.com
+Discord: lwangx26
 
 
 ## To-Do (for me)
@@ -58,6 +60,5 @@ idk google it, or if you're hopelessly lost email lwangx26@gmail.com. please don
 |❌      | update generation - patristos must be encoded with K1 or K2 |
 |❌      | update generation - xenocrypts must be encoded with K1 or K2 |
 |❌      | update generation - cryptanalysis of the Nihilist Cipher with a “crib” that is no shorter than double than the length of the keyword used |
-|❌      | add new cipher - 5x5 Checkerboard Cipher decode |
-|❌      | add new cipher - 5x5 Checkerboard Cipher cryptanalysis |
+|❌      | fix points |
 

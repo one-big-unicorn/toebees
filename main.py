@@ -1,33 +1,37 @@
 import json
 import random
+import traceback
 
 REFERENCE = """
 
 Input Format: {quantity}{letter} separated by spaces
-ex. 1A 3E 7G
+ex. 10A 3E 7G
 
-'rtest' for regional test preset
-'stest' for state test preset
-'every' for 1 of every cipher
+'r' for regional test preset
+'s' for state/national test preset
+'e' for 1 of every cipher
 
 CIPHERS
-A - regular aristocrat
+A - random aristocrat
 B - k1 aristocrat
 C - k2 aristocrat
 D - k3 aristocrat
-E - patristocrat
-F - xenocrypt
+E - k1/k2 patristocrat
+F - k1/k2 xenocrypt
 G - regular baconian
 H - word baconian
 I - fractionated morse
 J - cryptarithm
-K - porta
-L - complete columnar
-M - nihilist
-N - hill 2x2
-O - cryptanalysis porta           (state)
-P - hill 3x3                      (state)
-Q - cryptanalysis nihilist        (state)
+K - porta decode
+L - porta cryptanalysis         (state)
+M - nihilist decode
+N - nihilist cryptanalysis      (state)
+O - hill 2x2
+P - hill 3x3                    (state)
+Q - complete columnar
+R - complete columnar           (state)
+S - checkerboard decode         
+T - checkerboard cryptanalysis  (state)
 
 > """
 
@@ -46,12 +50,15 @@ CIPHERS = {
     "I": "fractionatedmorse",
     "J": "cryptarithm",
     "K": "porta",
-    "L": "compcolumnar",
+    "L": "porta",
     "M": "nihilistsub",
-    "N": "hill",
-    "O": "porta",  # state
-    "P": "hill",  # state
-    "Q": "nihilistsub"  # state
+    "N": "nihilistsub", 
+    "O": "hill",
+    "P": "hill",  
+    "Q": "compcolumnar", 
+    "R": "compcolumnar", 
+    "S": "checkerboard", 
+    "T": "checkerboard" 
 }
 
 POINTS = {
@@ -71,36 +78,36 @@ POINTS = {
     "N": 200,
     "O": 300,
     "P": 300,
-    "Q": 400
+    "Q": 400,
+    "R": 300,
+    "S": 300,
+    "T": 300
 }
 
 ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 S_ALPHABET = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ"
 
-
-def hasSameLetterMapping(a):
+def isValidLetterMapping(a):
     for i in range(26):
         if a[i] == ALPHABET[i]:
-            return True
-    return False
+            return False
+    return True
 
-def hasSameLetterMappingSpanish(a):
+def isValidLetterMappingSpanish(a):
     for i in range(27):
         if a[i] == S_ALPHABET[i]:
-            return True
-    return False
-
+            return False
+    return True
 
 def get3x3Key():
     f = open("text/3x3hillwords.txt", "r")
-    for i in range(0, random.randint(0, 4900)):
+    for i in range(0, random.randint(0, 4914)):
         f.readline()
     return f.readline().strip().upper()
 
-
 def get2x2Key():
     f = open("text/2x2hillwords.txt", "r")
-    for i in range(0, random.randint(0, 490)):
+    for i in range(0, random.randint(0, 496)):
         f.readline()
     return f.readline().strip().upper()
 
@@ -173,7 +180,7 @@ def genQuoteLength(min, max):
             return l[loc]
         loc += 1
 
-
+# returns random word with length [min, max]
 def getRandWord(min, max):
     f = open("text/words.txt", "r")
     for i in range(random.randint(0, 9000)):
@@ -203,20 +210,21 @@ def genProblem(type, num):
     ret["editEntry"] = str(num)
 
     match type:
+
+        # Random Aristocrat
         case "A":
             ret["encodeType"] = "random"
-            newAlphabet = (ALPHABET + '.')[:-1]  # creates copy of alphabet
-            while hasSameLetterMapping(newAlphabet):
+            newAlphabet = ALPHABET[:]  # creates copy of alphabet
+            while not isValidLetterMapping(newAlphabet):
                 newAlphabet = [char for char in newAlphabet]
                 random.shuffle(newAlphabet)
                 newAlphabet = "".join(newAlphabet)
-
             ret["alphabetDest"] = newAlphabet
             ret["alphabetSource"] = ALPHABET
             ret["operation"] = "decode"
             ret["offset"] = 1
             ret["keyword"] = ""
-            ret["question"] = "<p>Aristocrat</p>"
+            ret["question"] = "<p>Random Aristocrat</p>"
 
             r = {}
             for i in range(0, 26):
@@ -224,11 +232,12 @@ def genProblem(type, num):
             ret["replacement"] = r
             ret["cipherString"] = genQuoteLength(50, 130)
 
+        # K1 Aristocrat
         case "B":
-            ret["question"] = "<p>K1 Aristocrat</p>"
+            ret["question"] = "<p>K1 Aristocrat | Keyword</p>"
             ret["encodeType"] = "k1"
             ret["operation"] = "keyword"
-            offset = random.randint(4, 23)
+            offset = random.randint(1, 25)
             key = getRandWord(5, 8)
 
             mapping = "".join(dict.fromkeys(key)).upper()
@@ -238,25 +247,20 @@ def genProblem(type, num):
 
             offset_mapping = mapping[-offset:] + mapping[:-offset]
 
-            while hasSameLetterMapping(offset_mapping):
-                offset = random.randint(4, 23)
+            while not isValidLetterMapping(offset_mapping):
+                offset = random.randint(1, 25)
                 offset_mapping = mapping[-offset:] + mapping[:-offset]
-
-            # print(key)
-            # print(offset)
-            # print(mapping)
-            # print(offset_mapping)
 
             ret["keyword"] = key
             ret["offset"] = offset
             ret["cipherString"] = genQuoteLength(50, 130)
 
-
+        # K2 Aristocrat
         case "C":
-            ret["question"] = "<p>K2 Aristocrat</p>"
+            ret["question"] = "<p>K2 Aristocrat | Keyword</p>"
             ret["encodeType"] = "k2"
             ret["operation"] = "keyword"
-            offset = random.randint(4, 23)
+            offset = random.randint(1, 25)
             key = getRandWord(5, 8)
 
             mapping = "".join(dict.fromkeys(key)).upper()
@@ -266,55 +270,117 @@ def genProblem(type, num):
 
             offset_mapping = mapping[-offset:] + mapping[:-offset]
 
-            while hasSameLetterMapping(offset_mapping):
-                offset = random.randint(4, 23)
+            while not isValidLetterMapping(offset_mapping):
+                offset = random.randint(1, 25)
                 offset_mapping = mapping[-offset:] + mapping[:-offset]
-
-            # print(key)
-            # print(offset)
-            # print(mapping)
-            # print(offset_mapping)
 
             ret["keyword"] = key
             ret["offset"] = offset
             ret["cipherString"] = genQuoteLength(50, 130)
 
+        # K3 Aristocrat
         case "D":
-            ret["question"] = "<p>K3 Aristocrat</p>"
+            ret["question"] = "<p>K3 Aristocrat | Keyword</p>"
             ret["encodeType"] = "k3"
             ret["operation"] = "keyword"
-            ret["offset"] = random.randint(4, 23)
+            ret["offset"] = random.randint(1, 25)
             ret["keyword"] = getRandWord(5, 8)
             ret["cipherString"] = genQuoteLength(50, 130)
 
+        # K1/K2 Patristocrat
         case "E":
-            ret["encodeType"] = "random"
+            if (random.randint(0,1)):
+                ret["question"] = "<p>K1 Patristocrat</p>"
+                ret["encodeType"] = "k1"
+                ret["operation"] = "decode"
+                offset = 0
+                key = getRandWord(5, 8)
 
-            newAlphabet = (ALPHABET + '.')[:-1]  # creates copy of alphabet
-            while hasSameLetterMapping(newAlphabet):
-                newAlphabet = [char for char in newAlphabet]
-                random.shuffle(newAlphabet)
-                newAlphabet = "".join(newAlphabet)
+                mapping = "".join(dict.fromkeys(key)).upper()
+                for letter in ALPHABET:
+                    if letter.lower() not in key.lower():
+                        mapping += letter
 
-            ret["alphabetDest"] = newAlphabet
-            ret["alphabetSource"] = ALPHABET
-            ret["operation"] = "decode"
-            ret["offset"] = 1
-            ret["keyword"] = ""
-            ret["question"] = "<p>Patristocrat</p>"
+                offset_mapping = mapping[-offset:] + mapping[:-offset]
 
-            r = {}
-            for i in range(0, 26):
-                r[chr(i + 65)] = newAlphabet[i]
-            ret["replacement"] = r
-            ret["cipherString"] = genQuoteLength(100, 180)
+                while not isValidLetterMapping(offset_mapping):
+                    offset = random.randint(1, 25)
+                    offset_mapping = mapping[-offset:] + mapping[:-offset]
 
+                ret["keyword"] = key
+                ret["offset"] = offset
+                ret["cipherString"] = genQuoteLength(50, 130)
+            else:
+                ret["question"] = "<p>K2 Patristocrat</p>"
+                ret["encodeType"] = "k2"
+                ret["operation"] = "decode"
+                offset = random.randint(1, 25)
+                key = getRandWord(5, 8)
+
+                mapping = "".join(dict.fromkeys(key)).upper()
+                for letter in ALPHABET:
+                    if letter.lower() not in key.lower():
+                        mapping += letter
+
+                offset_mapping = mapping[-offset:] + mapping[:-offset]
+
+                while not isValidLetterMapping(offset_mapping):
+                    offset = random.randint(1, 25)
+                    offset_mapping = mapping[-offset:] + mapping[:-offset]
+
+                ret["keyword"] = key
+                ret["offset"] = offset
+                ret["cipherString"] = genQuoteLength(50, 130)
+
+        # K1/K2 Xenocrypt
         case "F":
-            ret["curlang"] = "es"
-            ret["encodeType"] = "random"
+            if (random.randint(0,1)):
+                ret["question"] = "<p>K1 Xenocrypt</p>"
+                ret["encodeType"] = "k1"
+                ret["operation"] = "decode"
+                offset = 0
+                key = getRandWord(5, 8)
 
-            newAlphabet = (S_ALPHABET + '.')[:-1]  # creates copy of alphabet
-            while hasSameLetterMappingSpanish(newAlphabet):
+                mapping = "".join(dict.fromkeys(key)).upper()
+                for letter in S_ALPHABET:
+                    if letter.lower() not in key.lower():
+                        mapping += letter
+
+                offset_mapping = mapping[-offset:] + mapping[:-offset]
+
+                while not isValidLetterMapping(offset_mapping):
+                    offset = random.randint(1, 25)
+                    offset_mapping = mapping[-offset:] + mapping[:-offset]
+
+                ret["keyword"] = key
+                ret["offset"] = offset
+                ret["cipherString"] = genQuoteLength(50, 130)
+            else:
+                ret["question"] = "<p>K2 Xenocrypt</p>"
+                ret["encodeType"] = "k2"
+                ret["operation"] = "decode"
+                offset = random.randint(1, 25)
+                key = getRandWord(5, 8)
+
+                mapping = "".join(dict.fromkeys(key)).upper()
+                for letter in S_ALPHABET:
+                    if letter.lower() not in key.lower():
+                        mapping += letter
+
+                offset_mapping = mapping[-offset:] + mapping[:-offset]
+
+                while not isValidLetterMapping(offset_mapping):
+                    offset = random.randint(1, 25)
+                    offset_mapping = mapping[-offset:] + mapping[:-offset]
+
+                ret["keyword"] = key
+                ret["offset"] = offset
+                ret["cipherString"] = genQuoteLength(50, 130)
+
+            ret["curlang"] = "es"
+
+            newAlphabet = S_ALPHABET[:]  # creates copy of alphabet
+            while not isValidLetterMappingSpanish(newAlphabet):
                 newAlphabet = [char for char in newAlphabet]
                 random.shuffle(newAlphabet)
                 newAlphabet = "".join(newAlphabet)
@@ -332,6 +398,7 @@ def genProblem(type, num):
             ret["replacement"] = r
             ret["cipherString"] = genSpanishQuoteLength(50, 130)
 
+        # Regular Baconian
         case "G":
             ret["operation"] = "let4let"
             ret["question"] = "<p>Baconian</p>"
@@ -340,6 +407,7 @@ def genProblem(type, num):
             ret["textb"] = mapping[1]
             ret["cipherString"] = genQuoteLength(25, 45)
 
+        # Word Baconian
         case "H":
             baconian_mapping = {'A': 'aaaaa', 'B': 'aaaab', 'C': 'aaaba', 'D': 'aaabb', 'E': 'aabaa',
                                 'F': 'aabab', 'G': 'aabba', 'H': 'aabbb', 'I': 'abaaa', 'J': 'abaaa', 'K': 'abaab',
@@ -404,6 +472,9 @@ def genProblem(type, num):
 
                 random.shuffle(l)
                 loc = 0
+
+
+
                 while 1:
                     found = True
                     # print(mapping)
@@ -422,6 +493,7 @@ def genProblem(type, num):
 
             # ret["words"] = []
 
+        # Fractionated Morse
         case "I":
             quote = genQuoteLength(32, 45)
             ret["cipherString"] = quote
@@ -437,7 +509,8 @@ def genProblem(type, num):
             ret["crib"] = crib
             ret["question"] = "<p>Fractionated Morse | Crib (Beginning of Quote): " + crib + " </p>"
 
-        case "J":  # cryptarithm
+        # Cryptarithm
+        case "J": 
             ret["question"] = "<p>Cryptarithm</p>"
             ret["operation"] = "encode"
 
@@ -445,56 +518,17 @@ def genProblem(type, num):
             ret["soltext"] = ""
             ret["cipherString"] = ""
 
+        # Porta Decode
         case "K":
             ret["cipherString"] = genQuoteLength(10, 40)
             ret["operation"] = "decode"
             ret["blocksize"] = 5
             key = getRandWord(3, 8).upper()
             ret["keyword"] = key
-            ret["question"] = "<p>Porta | Key: " + key + " </p>"
+            ret["question"] = "<p>Porta Decode | Key: " + key + " </p>"
 
+        # Porta Cryptanalysis
         case "L":
-            ret["operation"] = "decode"
-            ret["offset"] = random.randint(4, 23)
-            col = random.randint(6, 11)
-            key = ""
-            for i in range(col):
-                key += str(random.randint(0, 9))
-            ret["keyword"] = key
-            ret["columns"] = col
-
-            quote = genQuoteLength(40, 80)
-            ret["cipherString"] = quote
-            quote = quote.upper()
-            copy = ""
-            for letter in quote:
-                if letter in ALPHABET:
-                    copy += letter
-
-            crib_offset = len(copy) // 2 + random.randint(-10, 10)
-            crib = copy[crib_offset:crib_offset + col - random.randint(1, 3)]
-
-            ret["crib"] = crib
-            ret["question"] = "<p>Complete Columnar | Crib (Anywhere in Quote): " + crib + " </p>"
-
-        case "M":
-            ret["cipherString"] = genQuoteLength(30, 60)
-            ret["operation"] = "decode"
-            ret["blocksize"] = 5
-            key = getRandWord(3, 8).upper()
-            ret["keyword"] = key
-            poly = getRandWord(5, 12).upper()
-            ret["polybiusKey"] = poly
-            ret["question"] = "<p>Nihilist | Key: " + key + " | Polybius Key: " + poly + " </p>"
-
-        case "N":
-            ret["cipherString"] = genQuoteLength(5, 20)
-            ret["operation"] = "decode"
-            key = get2x2Key()
-            ret["keyword"] = key
-            ret["question"] = "<p>Hill | Key: " + key + " </p>"
-
-        case "O":
             ret["operation"] = "crypt"
             ret["blocksize"] = 5
             key = getRandWord(5, 8).upper()
@@ -518,14 +552,19 @@ def genProblem(type, num):
             ret["question"] = "<p>Porta Cryptanalysis | Crib (Starting at Letter " + str(
                 crib_offset + 1) + "): " + crib + " </p>"
 
-        case "P":
-            ret["cipherString"] = genQuoteLength(5, 20)
+        # Nihilist Decode
+        case "M":
+            ret["cipherString"] = genQuoteLength(30, 60)
             ret["operation"] = "decode"
-            key = get3x3Key()
+            ret["blocksize"] = 5
+            key = getRandWord(3, 8).upper()
             ret["keyword"] = key
-            ret["question"] = "<p>Hill | Key: " + key + " </p>"
+            poly = getRandWord(5, 12).upper()
+            ret["polybiusKey"] = poly
+            ret["question"] = "<p>Nihilist Decode | Key: " + key + " | Polybius Key: " + poly + " </p>"
 
-        case "Q":
+        # Nihilist Cryptanalysis
+        case "N":
             ret["operation"] = "crypt"
             ret["blocksize"] = 5
             key = getRandWord(5, 8).upper()
@@ -543,12 +582,117 @@ def genProblem(type, num):
                     copy += letter
 
             crib_offset = len(copy) // 2 + random.randint(-5, 5)
-            crib_length = len(key) - 2 + random.randint(0, 3)
+            crib_length = len(key)*2 + random.randint(0, 1)
             crib = copy[crib_offset:crib_offset + crib_length]
 
             ret["crib"] = crib
 
             ret["question"] = "<p>Nihilist Cryptanalysis | Crib (Starting at Letter " + str(
+                crib_offset + 1) + "): " + crib + " </p>"
+
+        # 2x2 Hill
+        case "O":
+            ret["cipherString"] = genQuoteLength(5, 20)
+            ret["operation"] = "decode"
+            key = get2x2Key()
+            ret["keyword"] = key
+            ret["question"] = "<p>Hill Decode | Key: " + key + " </p>"
+
+        # 3x3 Hill
+        case "P":
+            ret["cipherString"] = genQuoteLength(5, 20)
+            ret["operation"] = "decode"
+            key = get3x3Key()
+            ret["keyword"] = key
+            ret["question"] = "<p>Hill Decode | Key: " + key + " </p>"
+
+        # Complete Columnar (Regional)
+        case "Q":
+            ret["operation"] = "decode"
+            ret["offset"] = random.randint(1, 25)
+            col = random.randint(6, 11)
+            key = ""
+            for i in range(col):
+                key += str(random.randint(0, 9))
+            ret["keyword"] = key
+            ret["columns"] = col
+
+            quote = genQuoteLength(40, 80)
+            ret["cipherString"] = quote
+            quote = quote.upper()
+            copy = ""
+            for letter in quote:
+                if letter in ALPHABET:
+                    copy += letter
+
+            crib_offset = len(copy) // 2 + random.randint(-10, 10)
+            crib = copy[crib_offset:crib_offset + col - random.randint(1, 3)]
+
+            ret["crib"] = crib
+            ret["question"] = "<p>Complete Columnar | Crib (Anywhere in Quote): " + crib + " </p>"
+
+        # Complete Columnar (State)
+        case "R":
+            ret["operation"] = "decode"
+            ret["offset"] = random.randint(1, 25)
+            col = random.randint(6, 11)
+            key = ""
+            for i in range(col):
+                key += str(random.randint(0, 9))
+            ret["keyword"] = key
+            ret["columns"] = col
+
+            quote = genQuoteLength(40, 80)
+            ret["cipherString"] = quote
+
+            quote = quote.upper()
+            copy = ""
+            for letter in quote:
+                if letter in ALPHABET:
+                    copy += letter
+
+            crib_offset = len(copy) // 2 + random.randint(-10, 10)
+            crib = copy[crib_offset:crib_offset + col - random.randint(1, 3)]
+
+            ret["crib"] = crib
+            ret["question"] = "<p>Complete Columnar | Crib (Anywhere in Quote): " + crib + " </p>"
+
+
+        # Checkerboard Decode
+        case "S":
+            ret["cipherString"] = genQuoteLength(30, 60)
+            ret["operation"] = "decode"
+            ret["blocksize"] = 5
+            ret["keyword"] = getRandWord(5, 5).upper()
+            ret["keyword2"] = getRandWord(5, 5).upper()
+            poly = getRandWord(5, 12).upper()
+            ret["polybiusKey"] = poly
+            ret["question"] = "<p>Checkerboard Decode | Polybius Key: " + poly + " </p>"
+
+        # Checkerboard Cryptanalysis
+        case "T":
+            ret["operation"] = "crypt"
+            ret["blocksize"] = 5
+            ret["keyword"] = getRandWord(5, 5).upper()
+            ret["keyword2"] = getRandWord(5, 5).upper()
+            ret["polybiusKey"] = getRandWord(5, 12).upper()
+
+            quote = genQuoteLength(30, 60)
+            ret["cipherString"] = quote
+
+            quote = quote.upper()
+            copy = ""
+            for letter in quote:
+                if letter in ALPHABET:
+                    copy += letter
+
+            crib_offset = len(copy) // 2 + random.randint(-5, 5)
+            crib_length = random.randint(4, 6)
+            crib = copy[crib_offset:crib_offset + crib_length]
+
+            ret["crib"] = crib
+
+            ret["question"] = "<p>Checkerboard Cryptanalysis | Crib (Starting at Letter " + str(
                 crib_offset + 1) + "): " + crib + " </p>"
 
     return ret
@@ -559,6 +703,7 @@ def genTest(title, questions):
     count = 0
     for i in questions:
         count += i[0]
+
     ret["TEST.0"] = {
         "timed": -1,
         "count": count,
@@ -579,15 +724,17 @@ def genTest(title, questions):
     return ret
 
 
+
+
 test_title = input("Title: ").strip()
 
 problems_string = input(REFERENCE).strip()
-if problems_string.lower() == "rtest":
+if problems_string.lower() == "r":
     problems_string = "5A 1B 1C 1D 1E 1F 2I 2K 2L 2M 1G 1H 2J 3N"
-elif problems_string.lower() == "stest":
+elif problems_string.lower() == "s":
     problems_string = "6A 1D 2E 2F 2I 1K 2L 1M 1O 1Q 2G 1H 2J 2N 1P"
-elif problems_string.lower() == "every":
-    problems_string = "1A 1B 1C 1D 1E 1F 1G 1H 1J 1K 1L 1M 1N 1O 1P 1Q"
+elif problems_string.lower() == "e":
+    problems_string = "1A 1B 1C 1D 1E 1F 1G 1H 1J 1K 1L 1M 1N 1O 1P 1Q 1R 1S 1T"
 
 problems_string = problems_string.split(" ")
 
@@ -598,8 +745,8 @@ try:
     problems = []
     for i in range(len(problems_string)):
         problems.append([int(problems_string[i][:-1]), problems_string[i][-1:]])
-        # list of lists, first element is quantity, second is cipher letter
-
+    # list of 1x2 lists, first element is quantity, second is cipher letter
+    
     test = genTest(test_title, problems)
 
     with open(f"jsons\\{test_title}.json", "w") as f:
@@ -607,6 +754,9 @@ try:
 
     print("json successfully generated.")
 
-except:
+except Exception as e:
     print("try again dumbo.")
+    traceback.print_exception(e)
+
+
 print("\n")
