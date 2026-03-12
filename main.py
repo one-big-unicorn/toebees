@@ -95,7 +95,7 @@ with open("text/3x3hillwords.txt", "r") as f:
 with open("text/2x2hillwords.txt", "r") as f:
     HILL_2X2_WORDS = f.read().splitlines()
 
-with open("text/baconwords.txt", "r") as f:
+with open("text/baconwords.txt", "r", encoding="utf-8") as f:
     BACON_WORDS = f.read().splitlines()
 
 with open("text/words.txt", "r") as f:
@@ -308,7 +308,7 @@ def genProblem(type, num):
             # which doesn't use many different letters, making it much easier than intended
             LETTER_TO_BACON = {'A': 'AAAAA', 'B': 'AAAAB', 'C': 'AAABA', 'D': 'AAABB', 'E': 'AABAA', 'F': 'AABAB', 'G': 'AABBA', 'H': 'AABBB', 'I': 'ABAAA', 'J': 'ABAAA', 'K': 'ABAAB', 'L': 'ABABA', 'M': 'ABABB', 'N': 'ABBAA', 'O': 'ABBAB', 'P': 'ABBBA', 'Q': 'ABBBB', 'R': 'BAAAA', 'S': 'BAAAB', 'T': 'BAABA', 'U': 'BAABB', 'V': 'BAABB', 'W': 'BABAA', 'X': 'BABAB', 'Y': 'BABBA', 'Z': 'BABBB'}
 
-            # because all vowels happen to appear at an even index in the alphabet, 
+            # Because all vowels happen to appear at an even index in the alphabet, 
             # toebes can't find matching words for certain baconian codes given the ABAB or BABA mapping
             # so, I didn't include it as a random choice because it would break everything
             mapping = random.choice([
@@ -329,9 +329,8 @@ def genProblem(type, num):
                 "AAAAAAAAABBBBBBBBBAAAAAAAA",
                 "BBBBBBBBBAAAAAAAAABBBBBBBB",
                 "AAAAAAAAAAAAABBBBBBBBBBBBB",
-                "BBBBBBBBBBBBBAAAAAAAAAAAAA",
+                "BBBBBBBBBBBBBAAAAAAAAAAAAA"
             ])
-
             ret["abMapping"] = mapping
 
             # Convert quote to list of baconian codes
@@ -357,13 +356,14 @@ def genProblem(type, num):
 
                     # baconwords.txt contains the set of all the words that Toebes uses for word baconians 
                     # (except for ABAB/BABA pattern)
+                    # some words in Toebes contains the apostrophe or the special char NBSP
                     randomWord = getBaconWord() 
                     for letter in randomWord.replace(" ", "").replace("'", "").replace(" ", ""):
                         if letter in textA:
                             baconizedRandomWord += "A"
                         else:
                             baconizedRandomWord += "B"
-                words.append(randomWord)
+                words.append(randomWord.replace(" ", " "))
 
             ret["words"] = words
 
