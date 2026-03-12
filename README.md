@@ -54,24 +54,24 @@ Note: you can force-exit the program any time with Ctrl+C
 **6.** Go to [toebes.com](https://toebes.com/codebusters/TestManage.html) and scroll to the bottom of the page. 
 Select 'Import Tests from File' > Select File > Navigate to wherever you cloned the repository > toebees > jsons > yourtest.json
 
+Unfortunately, the logic of generating a cryptarithm is wayy too much for me to handle. This program just inserts a placeholder, and you have to go into the question on Toebes and use their calculator to generate it manually.
 
-**7.** Toebes will probably display that your test has a billion errors—just ignore them.
+
+**7.** Toebes may display errors on Nihilists/Baconians—just ignore them.
 Click 'Randomize Order' on the top left if you wish to randomize.
 
 
 **8.** Click 'Test Packet' at the top, then click 'Print' > Save as PDF
 
 
-## Support
+## Support / Suggestions
 
 Email: lwangx26@gmail.com
+
 Discord: lwangx26
 
 
 ## To-Do (for me)
 | Status | Task |
 | :---: | :------  |
-|❌      | holy crap make the baconian code readable pleaseeeee |
-|❌      | cryptarithm |
-|❌      | fix points |
-
+|✔| nothing |

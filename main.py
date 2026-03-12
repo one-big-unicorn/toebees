@@ -21,7 +21,7 @@ F - k1/k2 xenocrypt
 G - regular baconian
 H - word baconian
 I - fractionated morse
-J - cryptarithm
+J - cryptarithm (manual)
 K - porta decode
 L - porta cryptanalysis         (state)
 M - nihilist decode
@@ -62,26 +62,26 @@ CIPHERS = {
 }
 
 POINTS = {
-    "A": 200,
-    "B": 225,
-    "C": 250,
+    "A": 175,
+    "B": 175,
+    "C": 200,
     "D": 300,
-    "E": 500,
-    "F": 400,
+    "E": 450,
+    "F": 300,
     "G": 300,
-    "H": 450,
-    "I": 300,
-    "J": 250,
-    "K": 175,
-    "L": 200,
-    "M": 225,
-    "N": 200,
-    "O": 300,
-    "P": 300,
-    "Q": 400,
-    "R": 300,
-    "S": 300,
-    "T": 300
+    "H": 400,
+    "I": 275,
+    "J": 200,
+    "K": 150,
+    "L": 225,
+    "M": 200,
+    "N": 300,
+    "O": 200,
+    "P": 275,
+    "Q": 200,
+    "R": 250,
+    "S": 225,
+    "T": 275
 }
 
 ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -95,8 +95,8 @@ with open("text/3x3hillwords.txt", "r") as f:
 with open("text/2x2hillwords.txt", "r") as f:
     HILL_2X2_WORDS = f.read().splitlines()
 
-with open("text/5letterwords.txt", "r") as f:
-    FIVE_LETTER_WORDS = f.read().splitlines()
+with open("text/baconwords.txt", "r") as f:
+    BACON_WORDS = f.read().splitlines()
 
 with open("text/words.txt", "r") as f:
     ALL_WORDS = f.read().splitlines()
@@ -117,8 +117,8 @@ def get2x2Key():
 def get3x3Key():
     return random.choice(HILL_3X3_WORDS).upper()
 
-def get5LetterWord():
-    return random.choice(FIVE_LETTER_WORDS).upper()
+def getBaconWord():
+    return random.choice(BACON_WORDS).upper()
 
 # returns random word with length [min, max]
 def getRandWord(min_len, max_len):
@@ -151,6 +151,7 @@ def genK1K2Mapping(alphabet: str) -> tuple[str, int]:
     return key, offset
 
 def genBaconMapping():
+    # 20% chance of using whole alphabet, either alternating or half&half
     if random.random() > 0.8:
         return random.choice([
             ["acegikmoqsuwy", "bdfhjlnprtvxz"],
@@ -158,55 +159,21 @@ def genBaconMapping():
             ["abcdefghijklm", "nopqrstuvwxyz"],
             ["nopqrstuvwxyz", "abcdefghijklm"]
         ])
-    length = 3
+    
+    # 50% chance of 3 symbols for each A/B, 50% of 4
+    numOfSymbolsEach = 3
     if random.random() > 0.5:
-        length = 4
-    chars = "QWERTYUIOPASDFGHJKLZXCVBNM1234567890!@#$%^&*()-+=[]{};:/?!.,><"
+        numOfSymbolsEach = 4
+
+    chars = list("QWERTYUIOPASDFGHJKLZXCVBNM1234567890!@#$%^&*()-+=[]{};:/?!.,><")
     ret = []
-    for i in range(2):
+    for r in range(2):
         text = ""
-        for j in range(length):
-            index = random.randint(0, len(chars) - 1)
-            text += chars[index]
-            chars = chars[:index] + chars[index + 1:]
+        for _ in range(numOfSymbolsEach):
+            # removes a random character from chars and adds it to text
+            text += chars.pop(random.randrange(len(chars)))
         ret.append(text)
     return ret
-
-
-# def specialCase(mapping, bacon_code):
-#
-#     """
-#     fails:
-#     ABBBB in ABABABA
-#     BAAAA in BABABAB
-#     AAAAA in BABABAB
-#     AAABA in BABABAB is just PHLOX
-#     AAAAB in BABABAB
-#     """
-#
-#     if mapping == "ABABABABABABABABABABABABAB" and bacon_code == "ABBBB":
-#         return random.choice(
-#             ['YHTBH', 'AFTDT', 'AZTTF', 'OBNNN', 'QLBHN', 'WRHHH', 'WPNZL', 'CFVNL', 'ITHBF', 'CLRFL', 'CRBLF',
-#              'AHBJL', 'ULNTF', 'UPHDF', 'WDNBD', 'MPNPP', 'AFPBT', 'EJFVN', 'YVHFP', 'MBFNV', 'WVDVJ', 'CXTRF',
-#              'SZPJT', 'GRTDP', 'YNDPZ', 'ANLNJ', 'GJTVL', 'IHLFX', 'ENVLV', 'QPNNT', 'CVTPP', 'OJNDF', 'KTLHH',
-#              'AHBRB', 'YHDNZ', 'ADTHR', 'KXTRL', 'IHXRZ', 'GRPZD', 'ODFVV', 'OHDBJ', 'WPDHX', 'QTRNR', 'WDLVB',
-#              'QVBPV', 'UFXFH', 'OHXPN', 'SZRRF', 'ELZTX', 'MRBPR'])
-#     elif mapping == "BABABABABABABABABABABABABA":
-#         if bacon_code == "BAAAA":
-#             return random.choice(
-#                 ['YHTBH', 'AFTDT', 'AZTTF', 'OBNNN', 'QLBHN', 'WRHHH', 'WPNZL', 'CFVNL', 'ITHBF', 'CLRFL', 'CRBLF',
-#                  'AHBJL', 'ULNTF', 'UPHDF', 'WDNBD', 'MPNPP', 'AFPBT', 'EJFVN', 'YVHFP', 'MBFNV', 'WVDVJ', 'CXTRF',
-#                  'SZPJT', 'GRTDP', 'YNDPZ', 'ANLNJ', 'GJTVL', 'IHLFX', 'ENVLV', 'QPNNT', 'CVTPP', 'OJNDF', 'KTLHH',
-#                  'AHBRB', 'YHDNZ', 'ADTHR', 'KXTRL', 'IHXRZ', 'GRPZD', 'ODFVV', 'OHDBJ', 'WPDHX', 'QTRNR', 'WDLVB',
-#                  'QVBPV', 'UFXFH', 'OHXPN', 'SZRRF', 'ELZTX', 'MRBPR'])
-#         elif bacon_code == "AAAAA":
-#             return random.choice(['TNVPD', 'FDZLF', 'HBLNN', 'VHBTR', 'HVFZL', 'RNHZB', 'DBBHJ', 'JRRLB', 'HVDRH', 'FTXNZ', 'FXTZT', 'VHHBH', 'LJHDR', 'PJPXH', 'TRLXL', 'BVXTX', 'XHTJR', 'PVZPP', 'PTVZN', 'HFNLJ', 'FHHJJ', 'NHZPR', 'TDDJR', 'FJRNP', 'RTTZX', 'VRVFV', 'HBLLF', 'LFBPN', 'VFXDL', 'PRBVJ', 'DNJBX', 'NXJLT', 'NPJNN', 'NZZNJ', 'TRLJP', 'PLZPR', 'JVFXX', 'HHDDD', 'VTPFH', 'XXJFT', 'RFPRN', 'PXLPN', 'ZLNBF', 'XNBXP', 'RRDHV', 'JFLLR', 'BZPFF', 'HRPJX', 'HJBFD', 'XXDZL'])
-#         elif bacon_code == "AAABA":
-#             return random.choice(['BRFMB', 'RJXSN', 'HXTWB', 'HXTGR', 'VHDCD', 'XLVOH', 'HTNCT', 'BNBKL', 'TNJQB', 'LZDIN', 'BLXMZ', 'TRNAV', 'VBPAV', 'ZRRWP', 'JBHAD', 'FBBSR', 'NZTKX', 'XZHQP', 'NXZCJ', 'JZXMT', 'FZNAX', 'PPDAL', 'BZHKT', 'DHHQT', 'RVTCT', 'PBXWL', 'ZFNKV', 'DPLKB', 'RFBEL', 'FZLCF', 'ZJRYV', 'FFJGT', 'NBBCB', 'VDXET', 'XTFOR', 'NVXOT', 'VJJQD', 'PPNGV', 'LZNAT', 'NNPKR', 'RTREX', 'XHTKL', 'RVDMH', 'BJBWL', 'DDXEX', 'VRNMJ', 'ZJFEH', 'ZJHQX', 'XNFWR', 'HJHMZ'])
-#         elif bacon_code == "AAAAB":
-#             return random.choice(['PZJZI', 'PBJPM', 'ZXFLE', 'JHVPU', 'HBFVG', 'LRTTG', 'XBFLU', 'RBZFC', 'FVBLK', 'JBVJU', 'HHPPS', 'VVTFU', 'ZPFPI', 'LZPRE', 'DRHVO', 'LRHXU', 'DNTHM', 'ZPDLM', 'VLXLK', 'NFZJM', 'NZNVW', 'RLTTS', 'BRRRK', 'VNJVK', 'FXLZA', 'LBZPI', 'LVHRI', 'TVBVQ', 'RPLRE', 'DNJHE', 'LRRFO', 'PLVNS', 'HNBJM', 'DDPDM', 'BNZZE', 'ZTDVK', 'DHLFG', 'LLRVS', 'JTJTK', 'VNDRK', 'PDTPY', 'RBHTO', 'TLRRI', 'THVBG', 'RXDRU', 'PLLDK', 'NZBLA', 'XRPVS', 'NJPJW', 'NZVXO'])
-#
-#     return False
 
 def genQuoteLength(min_len, max_len):
     quote = ""
@@ -244,7 +211,7 @@ def genCrib(plaintext, crib_length, start_pos=None) -> tuple[str, int]:
 def genProblem(type, num):
     ret = {}
     ret["cipherType"] = CIPHERS[type]
-    ret["points"] = POINTS[type]
+    ret["points"] = POINTS[type] + random.randrange(-12, 12)
     ret["author"] = ""
     ret["curlang"] = "en"
     ret["editEntry"] = str(num)
@@ -326,14 +293,24 @@ def genProblem(type, num):
 
         # Word Baconian
         case "H":
-            baconian_mapping = {'A': 'aaaaa', 'B': 'aaaab', 'C': 'aaaba', 'D': 'aaabb', 'E': 'aabaa',
-                                'F': 'aabab', 'G': 'aabba', 'H': 'aabbb', 'I': 'abaaa', 'J': 'abaaa', 'K': 'abaab',
-                                'L': 'ababa', 'M': 'ababb', 'N': 'abbaa', 'O': 'abbab', 'P': 'abbba',
-                                'Q': 'abbbb', 'R': 'baaaa', 'S': 'baaab', 'T': 'baaba', 'U': 'baabb', 'V': 'baabb',
-                                'W': 'babaa', 'X': 'babab', 'Y': 'babba', 'Z': 'babbb'}
-
+            quote = genQuoteLength(25, 45)
+            ret["cipherString"] = quote
             ret["operation"] = "words"
 
+            crib, offset = genCrib(quote, random.randint(4,6))
+            ret["question"] = "<p>Word Baconian | Crib (Starting at Group " + str(
+                offset + 1) + "): " + crib + " </p>"
+            ret["crib"] = crib
+
+            # for word baconians, we have to "reverse engineer" the words used
+            # otherwise, toebes will automatically select from the alphabetic start of its word dictionary,
+            # resulting in ciphertext that looks like ALORD AHOME CAIRO CABLE ABABY ABODY AFOUR...
+            # which doesn't use many different letters, making it much easier than intended
+            LETTER_TO_BACON = {'A': 'AAAAA', 'B': 'AAAAB', 'C': 'AAABA', 'D': 'AAABB', 'E': 'AABAA', 'F': 'AABAB', 'G': 'AABBA', 'H': 'AABBB', 'I': 'ABAAA', 'J': 'ABAAA', 'K': 'ABAAB', 'L': 'ABABA', 'M': 'ABABB', 'N': 'ABBAA', 'O': 'ABBAB', 'P': 'ABBBA', 'Q': 'ABBBB', 'R': 'BAAAA', 'S': 'BAAAB', 'T': 'BAABA', 'U': 'BAABB', 'V': 'BAABB', 'W': 'BABAA', 'X': 'BABAB', 'Y': 'BABBA', 'Z': 'BABBB'}
+
+            # because all vowels happen to appear at an even index in the alphabet, 
+            # toebes can't find matching words for certain baconian codes given the ABAB or BABA mapping
+            # so, I didn't include it as a random choice because it would break everything
             mapping = random.choice([
                 "AABBAABBAABBAABBAABBAABBAA",
                 "BBAABBAABBAABBAABBAABBAABB",
@@ -350,65 +327,39 @@ def genProblem(type, num):
             ])
 
             ret["abMapping"] = mapping
-            quote = genQuoteLength(25, 45)
-            ret["cipherString"] = quote
 
-            quote = quote.upper()
+            # Convert quote to list of baconian codes
+            quote_alpha = [letter.upper() for letter in quote if letter.isalpha()]
+            quote_bacon = [LETTER_TO_BACON[char] for char in quote_alpha]
 
-            quote_chars = ""
-            for char in quote:
-                if char in ALPHABET:
-                    quote_chars += char
-
-            crib_offset = len(quote_chars) // 2 + random.randint(-5, 3)
-            crib = quote_chars[crib_offset:crib_offset + 4]
-
-            ret["question"] = "<p>Word Baconian | Crib (Starting at Group " + str(
-                crib_offset + 1) + "): " + crib + " </p>"
-            ret["crib"] = crib
-
-            quote_bacon = [baconian_mapping[char].upper() for char in quote_chars]
-
+            # ciphertext chars in textA correspond to plaintext A
+            # for example, if mapping = AAAABBBBAAAABBBBAAAABBBBAA, then
+            # textA = ABCDIJKLQRSTYZ, and textB = EFGHMNOPUVWX
             textA = ""
-            for i in range(len(ALPHABET)):
+            for i in range(26):
                 if mapping[i] == 'A':
                     textA += ALPHABET[i]
-            textB = ""
-            for i in range(len(ALPHABET)):
-                if mapping[i] == 'B':
-                    textB += ALPHABET[i]
 
+            # for each letter of the plaintext, we have to find a random ciphertext word 
+            # that corresponds to the letter after the given baconian mapping is applied
             words = []
-
-            l = open("text/5letterwords.txt", "r", encoding="utf-8").read().split('\n')
             for bacon in quote_bacon:
-                # s = specialCase(mapping, bacon)
-                # if s:
-                #     words.append(s)
-                #     continue
+                randomWord = ""
+                baconizedRandomWord = ""
+                while bacon != baconizedRandomWord:
+                    baconizedRandomWord = ""
 
-                random.shuffle(l)
-                loc = 0
-
-
-
-                while 1:
-                    found = True
-                    # print(mapping)
-                    # print(bacon)
-                    for i in range(5):
-                        if (bacon[i] == 'A' and l[loc][i] not in textA) or (bacon[i] == 'B' and l[loc][i] not in textB):
-                            found = False
-                            break
-                    if found:
-                        break
-                    loc += 1
-                words.append(l[loc])
+                    # baconwords.txt contains the set of all the words that Toebes uses for word baconians 
+                    # (except for ABAB/BABA pattern)
+                    randomWord = getBaconWord() 
+                    for letter in randomWord.replace(" ", "").replace("'", "").replace(" ", ""):
+                        if letter in textA:
+                            baconizedRandomWord += "A"
+                        else:
+                            baconizedRandomWord += "B"
+                words.append(randomWord)
 
             ret["words"] = words
-            # print(words)
-
-            # ret["words"] = []
 
         # Fractionated Morse
         case "I":
@@ -416,7 +367,6 @@ def genProblem(type, num):
             ret["cipherString"] = quote
             ret["operation"] = "crypt"
             ret["keyword"] = getRandWord(5, 9)
-
             crib, offset = genCrib(quote, 4, 0)
             ret["crib"] = crib
             ret["question"] = "<p>Fractionated Morse | Crib (Beginning of Quote): " + crib + " </p>"
@@ -425,7 +375,6 @@ def genProblem(type, num):
         case "J": 
             ret["question"] = "<p>Cryptarithm</p>"
             ret["operation"] = "encode"
-
             ret["problem"] = ""
             ret["soltext"] = ""
             ret["cipherString"] = ""
@@ -435,7 +384,7 @@ def genProblem(type, num):
             ret["cipherString"] = genQuoteLength(10, 40)
             ret["operation"] = "decode"
             ret["blocksize"] = 5
-            key = getRandWord(3, 8).upper()
+            key = getRandWord(3, 8)
             ret["keyword"] = key
             ret["question"] = "<p>Porta Decode | Key: " + key + " </p>"
 
@@ -443,15 +392,13 @@ def genProblem(type, num):
         case "L":
             ret["operation"] = "crypt"
             ret["blocksize"] = 5
-            key = getRandWord(5, 8).upper()
+            key = getRandWord(5, 8)
             ret["keyword"] = key
-
             quote = genQuoteLength(20, 40)
             ret["cipherString"] = quote
-
             crib, offset = genCrib(quote, random.randint(4, 6))
             ret["crib"] = crib
-            ret["question"] = "<p>Porta Cryptanalysis | Crib (Starting at Letter " + str(
+            ret["question"] = "<p>Porta Cryptanalysis Decode | Crib (Starting at Letter " + str(
                 offset + 1) + "): " + crib + " </p>"
 
         # Nihilist Decode
@@ -459,9 +406,9 @@ def genProblem(type, num):
             ret["cipherString"] = genQuoteLength(30, 60)
             ret["operation"] = "decode"
             ret["blocksize"] = 5
-            key = getRandWord(3, 8).upper()
+            key = getRandWord(3, 8)
             ret["keyword"] = key
-            poly = getRandWord(5, 12).upper()
+            poly = getRandWord(5, 12)
             ret["polybiusKey"] = poly
             ret["question"] = "<p>Nihilist Decode | Key: " + key + " | Polybius Key: " + poly + " </p>"
 
@@ -469,16 +416,14 @@ def genProblem(type, num):
         case "N":
             ret["operation"] = "crypt"
             ret["blocksize"] = 5
-            key = getRandWord(5, 8).upper()
+            key = getRandWord(5, 8)
             ret["keyword"] = key
-            ret["polybiusKey"] = getRandWord(5, 12).upper()
-
-            quote = genQuoteLength(30, 60)
+            ret["polybiusKey"] = getRandWord(5, 12)
+            quote = genQuoteLength(40, 60) # min length changed from 30 to 40 to ensure len(crib) < len(alpha quote)
             ret["cipherString"] = quote
-
             crib, offset = genCrib(quote, len(key)*2 + random.randint(0, 1))
             ret["crib"] = crib
-            ret["question"] = "<p>Nihilist Cryptanalysis | Crib (Starting at Letter " + str(
+            ret["question"] = "<p>Nihilist Cryptanalysis Decode | Crib (Starting at Letter " + str(
                 offset + 1) + "): " + crib + " </p>"
 
         # 2x2 Hill
@@ -499,97 +444,70 @@ def genProblem(type, num):
 
         # Complete Columnar (Regional)
         case "Q":
+            quote = genQuoteLength(40, 80)
+            ret["cipherString"] = quote
             ret["operation"] = "decode"
             ret["offset"] = random.randint(1, 25)
-            col = random.randint(6, 11)
+            col = random.randint(6, 9)
             key = ""
             for i in range(col):
                 key += str(random.randint(0, 9))
             ret["keyword"] = key
             ret["columns"] = col
-
-            quote = genQuoteLength(40, 80)
-            ret["cipherString"] = quote
-            quote = quote.upper()
-            copy = ""
-            for letter in quote:
-                if letter in ALPHABET:
-                    copy += letter
-
-            crib_offset = len(copy) // 2 + random.randint(-10, 10)
-            crib = copy[crib_offset:crib_offset + col - random.randint(1, 3)]
-
+        
+            # Crib is no shorter than col - 1 for Regional
+            crib, offset = genCrib(quote, col - random.randint(0, 1))            
             ret["crib"] = crib
             ret["question"] = "<p>Complete Columnar | Crib (Anywhere in Quote): " + crib + " </p>"
 
         # Complete Columnar (State)
         case "R":
+            quote = genQuoteLength(40, 80)
+            ret["cipherString"] = quote
             ret["operation"] = "decode"
             ret["offset"] = random.randint(1, 25)
-            col = random.randint(6, 11)
+            col = random.randint(10, 11)
             key = ""
             for i in range(col):
                 key += str(random.randint(0, 9))
             ret["keyword"] = key
             ret["columns"] = col
-
-            quote = genQuoteLength(40, 80)
-            ret["cipherString"] = quote
-
-            quote = quote.upper()
-            copy = ""
-            for letter in quote:
-                if letter in ALPHABET:
-                    copy += letter
-
-            crib_offset = len(copy) // 2 + random.randint(-10, 10)
-            crib = copy[crib_offset:crib_offset + col - random.randint(1, 3)]
-
+            
+            # Crib is no shorter than col - 3 for States/Nationals
+            crib, offset = genCrib(quote, col - random.randint(1, 3))            
             ret["crib"] = crib
             ret["question"] = "<p>Complete Columnar | Crib (Anywhere in Quote): " + crib + " </p>"
-
 
         # Checkerboard Decode
         case "S":
             ret["cipherString"] = genQuoteLength(30, 60)
             ret["operation"] = "decode"
             ret["blocksize"] = 5
-            ret["keyword"] = get5LetterWord()
-            ret["keyword2"] = getRandWord(5, 5).upper()
-            poly = getRandWord(5, 12).upper()
+            ret["keyword"] = getRandWord(5, 5)
+            ret["keyword2"] = getRandWord(5, 5)
+            poly = getRandWord(5, 12)
             ret["polybiusKey"] = poly
             ret["question"] = "<p>Checkerboard Decode | Polybius Key: " + poly + " </p>"
 
         # Checkerboard Cryptanalysis
         case "T":
-            ret["operation"] = "crypt"
-            ret["blocksize"] = 5
-            ret["keyword"] = getRandWord(5, 5).upper()
-            ret["keyword2"] = getRandWord(5, 5).upper()
-            ret["polybiusKey"] = getRandWord(5, 12).upper()
-
             quote = genQuoteLength(30, 60)
             ret["cipherString"] = quote
+            ret["operation"] = "crypt"
+            ret["blocksize"] = 5
+            ret["keyword"] = getRandWord(5, 5)
+            ret["keyword2"] = getRandWord(5, 5)
+            ret["polybiusKey"] = getRandWord(5, 12)
 
-            quote = quote.upper()
-            copy = ""
-            for letter in quote:
-                if letter in ALPHABET:
-                    copy += letter
-
-            crib_offset = len(copy) // 2 + random.randint(-5, 5)
-            crib_length = random.randint(4, 6)
-            crib = copy[crib_offset:crib_offset + crib_length]
-
+            crib, offset = genCrib(quote, random.randint(5, 7))
             ret["crib"] = crib
-
-            ret["question"] = "<p>Checkerboard Cryptanalysis | Crib (Starting at Letter " + str(
-                crib_offset + 1) + "): " + crib + " </p>"
+            ret["question"] = "<p>Checkerboard Cryptanalysis Decode | Crib (Starting at Letter " + str(
+                offset + 1) + "): " + crib + " </p>"
 
     return ret
 
 
-def genTest(title, questions):
+def genTest(title, questions, category):
     ret = {}
     count = 0
     for i in questions:
@@ -603,23 +521,23 @@ def genTest(title, questions):
         "useCustomHeader": False,
         "customHeader": "",
         "customHeaderImage": "",
-        "testtype": "cstate"
+        "testtype": f"{category}"
     }
 
     num = 0
     for i in questions:
-        for j in range(i[0]):
+        for _ in range(i[0]):
             ret[f"CIPHER.{num}"] = genProblem(i[1], num)
             num += 1
-
     return ret
-
 
 ### main start ###
 test_title = input("Title: ").strip()
 
 problems_string = input(REFERENCE).strip()
+category = "cstate"
 if problems_string.lower() == "r":
+    category = "cregional"
     problems_string = "5A 1B 1C 1D 1E 1F 2I 2K 2L 2M 1G 1H 2J 3N"
 elif problems_string.lower() == "s":
     problems_string = "6A 1D 2E 2F 2I 1K 2L 1M 1O 1Q 2G 1H 2J 2N 1P"
@@ -627,25 +545,17 @@ elif problems_string.lower() == "e":
     problems_string = "1A 1B 1C 1D 1E 1F 1G 1H 1J 1K 1L 1M 1N 1O 1P 1Q 1R 1S 1T"
 
 problems_string = problems_string.split(" ")
-
-print("\n\n")
-
-
+print("\n")
 try:
     problems = []
     for i in range(len(problems_string)):
         problems.append([int(problems_string[i][:-1]), problems_string[i][-1:]])
     # list of 1x2 lists, first element is quantity, second is cipher letter
-    
-    test = genTest(test_title, problems)
-
+    test = genTest(test_title, problems, category)
     with open(f"jsons\\{test_title}.json", "w") as f:
         json.dump(test, f)
-
-    print("json successfully generated.")
-
+    print("\033[32m" + "json successfully generated" + "\033[0m")
 except Exception as e:
-    print("try again dumbo.")
+    print("\033[31m" + "try again dumbo." + "\033[0m")
     traceback.print_exception(e)
-
 print("\n")
