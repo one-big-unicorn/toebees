@@ -280,7 +280,7 @@ def genProblem(type, num):
                 ret["encodeType"] = "k2"
             ret["operation"] = "decode"
             ret["keyword"], ret["offset"] = genK1K2Mapping(S_ALPHABET)
-            ret["cipherString"] = genQuoteLength(50, 130)
+            ret["cipherString"] = genSpanishQuoteLength(50, 130)
 
         # Regular Baconian
         case "G":
