@@ -1,6 +1,11 @@
 import json
+from pathlib import Path
 import random
+import re
+import sys
+import tkinter as tk
 import traceback
+from tkinter import messagebox, ttk
 
 REFERENCE = """
 
@@ -60,6 +65,49 @@ CIPHERS = {
     "S": "checkerboard", 
     "T": "checkerboard" 
 }
+
+CIPHER_LABELS = {
+    "A": "Random Aristocrat",
+    "B": "K1 Aristocrat",
+    "C": "K2 Aristocrat",
+    "D": "K3 Aristocrat",
+    "E": "K1/K2 Patristocrat",
+    "F": "K1/K2 Xenocrypt",
+    "G": "Regular Baconian",
+    "H": "Word Baconian",
+    "I": "Fractionated Morse",
+    "J": "Cryptarithm                   (manual)",
+    "K": "Porta Decode",
+    "L": "Porta Cryptanalysis (state)",
+    "M": "Nihilist Decode",
+    "N": "Nihilist Cryptanalysis (state)",
+    "O": "Hill 2x2",
+    "P": "Hill 3x3 (state)",
+    "Q": "Complete Columnar",
+    "R": "Complete Columnar (state)",
+    "S": "Checkerboard Decode",
+    "T": "Checkerboard Cryptanalysis (state)",
+}
+
+DEFAULT_CATEGORY = "cstate"
+PRESET_SPECS = {
+    "r": {
+        "category": "cregional",
+        "label": "Regional preset",
+        "spec": "5A 1B 1C 1D 1E 1F 2I 2K 2L 2M 1G 1H 2J 3N",
+    },
+    "s": {
+        "category": "cstate",
+        "label": "State/National preset",
+        "spec": "6A 1D 2E 2F 2I 1K 2L 1M 1O 1Q 2G 1H 2J 2N 1P",
+    },
+    "e": {
+        "category": "cstate",
+        "label": "One of each",
+        "spec": "1A 1B 1C 1D 1E 1F 1G 1H 1I 1J 1K 1L 1M 1N 1O 1P 1Q 1R 1S 1T",
+    },
+}
+JSON_DIR = Path("jsons")
 
 POINTS = {
     "A": 175,
@@ -537,31 +585,226 @@ def genTest(title, questions, category):
             num += 1
     return ret
 
-### main start ###
-test_title = input("Title: ").strip()
+def sanitize_filename(title):
+    cleaned = re.sub(r'[<>:"/\\|?*]+', "_", title).strip().strip(".")
+    return cleaned or "test"
 
-problems_string = input(REFERENCE).strip()
-category = "cstate"
-if problems_string.lower() == "r":
-    category = "cregional"
-    problems_string = "5A 1B 1C 1D 1E 1F 2I 2K 2L 2M 1G 1H 2J 3N"
-elif problems_string.lower() == "s":
-    problems_string = "6A 1D 2E 2F 2I 1K 2L 1M 1O 1Q 2G 1H 2J 2N 1P"
-elif problems_string.lower() == "e":
-    problems_string = "1A 1B 1C 1D 1E 1F 1G 1H 1J 1K 1L 1M 1N 1O 1P 1Q 1R 1S 1T"
 
-problems_string = problems_string.split(" ")
-print("\n")
-try:
+def parse_problems_string(problems_string):
+    raw_value = problems_string.strip()
+    if not raw_value:
+        raise ValueError("Select at least one cipher before generating a test.")
+
+    category = DEFAULT_CATEGORY
+    preset = PRESET_SPECS.get(raw_value.lower())
+    if preset is not None:
+        category = preset["category"]
+        raw_value = preset["spec"]
+
     problems = []
-    for i in range(len(problems_string)):
-        problems.append([int(problems_string[i][:-1]), problems_string[i][-1:]])
-    # list of 1x2 lists, first element is quantity, second is cipher letter
-    test = genTest(test_title, problems, category)
-    with open(f"jsons\\{test_title}.json", "w") as f:
-        json.dump(test, f)
-    print("\033[32m" + "json successfully generated" + "\033[0m")
-except Exception as e:
-    print("\033[31m" + "try again dumbo." + "\033[0m")
-    traceback.print_exception(e)
-print("\n")
+    for token in raw_value.split():
+        match = re.fullmatch(r"(\d+)([A-Za-z])", token)
+        if match is None:
+            raise ValueError(f"Invalid cipher token: {token}")
+
+        quantity = int(match.group(1))
+        cipher_code = match.group(2).upper()
+        if cipher_code not in CIPHERS:
+            raise ValueError(f"Unknown cipher code: {cipher_code}")
+        if quantity > 0:
+            problems.append([quantity, cipher_code])
+
+    if not problems:
+        raise ValueError("Select at least one cipher before generating a test.")
+
+    return problems, category
+
+
+def build_problem_string(counts):
+    return " ".join(
+        f"{counts[code]}{code}"
+        for code in CIPHER_LABELS
+        if counts[code] > 0
+    )
+
+
+def save_test_json(test_title, questions, category):
+    cleaned_title = test_title.strip()
+    if not cleaned_title:
+        raise ValueError("Enter a test title.")
+
+    JSON_DIR.mkdir(exist_ok=True)
+    output_path = JSON_DIR / f"{sanitize_filename(cleaned_title)}.json"
+    test = genTest(cleaned_title, questions, category)
+    with output_path.open("w", encoding="utf-8") as output_file:
+        json.dump(test, output_file)
+    return output_path
+
+
+def run_cli():
+    test_title = input("Title: ").strip()
+    problems_string = input(REFERENCE).strip()
+    print("\n")
+    try:
+        problems, category = parse_problems_string(problems_string)
+        output_path = save_test_json(test_title, problems, category)
+        print("\033[32m" + f"json successfully generated: {output_path}" + "\033[0m")
+    except Exception as error:
+        print("\033[31m" + "try again dumbo." + "\033[0m")
+        traceback.print_exception(error)
+    print("\n")
+
+
+class ToebeesGUI:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("toebees")
+        self.root.geometry("980x760")
+        self.root.minsize(820, 620)
+        try:
+            self.root.state("zoomed")
+        except tk.TclError:
+            self.root.attributes("-zoomed", True)
+
+        self.title_var = tk.StringVar()
+        self.category_var = tk.StringVar(value=DEFAULT_CATEGORY)
+        self.status_var = tk.StringVar(value="Ready.")
+        self.count_vars = {
+            code: tk.IntVar(value=0)
+            for code in CIPHER_LABELS
+        }
+
+        self._build_layout()
+
+    def _build_layout(self):
+        container = ttk.Frame(self.root, padding=16)
+        container.grid(sticky="nsew")
+        self.root.columnconfigure(0, weight=1)
+        self.root.rowconfigure(0, weight=1)
+        container.columnconfigure(0, weight=1)
+        container.rowconfigure(2, weight=1)
+
+        title_frame = ttk.Frame(container)
+        title_frame.grid(row=0, column=0, sticky="ew", pady=(0, 12))
+        title_frame.columnconfigure(1, weight=1)
+
+        ttk.Label(title_frame, text="Test title").grid(row=0, column=0, sticky="w", padx=(0, 12))
+        ttk.Entry(title_frame, textvariable=self.title_var).grid(row=0, column=1, sticky="ew")
+
+        controls_frame = ttk.Frame(container)
+        controls_frame.grid(row=1, column=0, sticky="ew", pady=(0, 12))
+        controls_frame.columnconfigure(0, weight=1)
+        controls_frame.columnconfigure(1, weight=1)
+
+        category_frame = ttk.LabelFrame(controls_frame, text="Test type", padding=12)
+        category_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
+        ttk.Radiobutton(
+            category_frame,
+            text="State/National",
+            value="cstate",
+            variable=self.category_var,
+        ).grid(row=0, column=0, sticky="w")
+        ttk.Radiobutton(
+            category_frame,
+            text="Regional",
+            value="cregional",
+            variable=self.category_var,
+        ).grid(row=1, column=0, sticky="w", pady=(6, 0))
+
+        preset_frame = ttk.LabelFrame(controls_frame, text="Presets", padding=12)
+        preset_frame.grid(row=0, column=1, sticky="nsew", padx=(8, 0))
+        ttk.Button(preset_frame, text="Regional preset", command=lambda: self.apply_preset("r")).grid(row=0, column=0, sticky="ew")
+        ttk.Button(preset_frame, text="State/National preset", command=lambda: self.apply_preset("s")).grid(row=0, column=1, sticky="ew", padx=8)
+        ttk.Button(preset_frame, text="One of each", command=lambda: self.apply_preset("e")).grid(row=0, column=2, sticky="ew")
+        ttk.Button(preset_frame, text="Clear", command=self.clear_counts).grid(row=0, column=3, sticky="ew", padx=(8, 0))
+
+        list_frame = ttk.LabelFrame(container, text="Cipher counts", padding=12)
+        list_frame.grid(row=2, column=0, sticky="nsew")
+        for column in range(2):
+            list_frame.columnconfigure(column, weight=1)
+
+        codes = list(CIPHER_LABELS)
+        midpoint = (len(codes) + 1) // 2
+        for index, code in enumerate(codes):
+            column = 0 if index < midpoint else 1
+            row = index if index < midpoint else index - midpoint
+            row_frame = ttk.Frame(list_frame, padding=(0, 4))
+            row_frame.grid(row=row, column=column, sticky="ew", padx=(0, 16) if column == 0 else (16, 0))
+            row_frame.columnconfigure(1, weight=1)
+
+            ttk.Label(row_frame, text=CIPHER_LABELS[code]).grid(row=0, column=1, sticky="w")
+            ttk.Button(row_frame, text="-", width=3, command=lambda current=code: self.adjust_count(current, -1)).grid(row=0, column=2, padx=(8, 4))
+            ttk.Label(row_frame, textvariable=self.count_vars[code], width=4, anchor="center").grid(row=0, column=3)
+            ttk.Button(row_frame, text="+", width=3, command=lambda current=code: self.adjust_count(current, 1)).grid(row=0, column=4, padx=(4, 0))
+
+        actions_frame = ttk.Frame(container)
+        actions_frame.grid(row=3, column=0, sticky="ew", pady=(12, 0))
+        actions_frame.columnconfigure(0, weight=1)
+        ttk.Label(actions_frame, textvariable=self.status_var).grid(row=0, column=0, sticky="w")
+        ttk.Button(
+            actions_frame,
+            text="Generate JSON",
+            command=self.generate_json,
+            width=28,
+        ).grid(row=0, column=1, sticky="e", ipadx=36, ipady=20)
+
+    def adjust_count(self, code, delta):
+        current_value = self.count_vars[code].get()
+        self.count_vars[code].set(max(0, current_value + delta))
+
+    def clear_counts(self):
+        for count_var in self.count_vars.values():
+            count_var.set(0)
+        self.status_var.set("Cleared all cipher counts.")
+
+    def apply_preset(self, preset_key):
+        preset = PRESET_SPECS[preset_key]
+        for count_var in self.count_vars.values():
+            count_var.set(0)
+
+        problems, _ = parse_problems_string(preset["spec"])
+        for quantity, code in problems:
+            self.count_vars[code].set(quantity)
+
+        self.category_var.set(preset["category"])
+        self.status_var.set(f"Loaded {preset['label'].lower()}.")
+
+    def generate_json(self):
+        counts = {
+            code: count_var.get()
+            for code, count_var in self.count_vars.items()
+        }
+        problem_string = build_problem_string(counts)
+        try:
+            problems, _ = parse_problems_string(problem_string)
+            output_path = save_test_json(self.title_var.get(), problems, self.category_var.get())
+        except Exception as error:
+            self.status_var.set(str(error))
+            messagebox.showerror("toebees", str(error))
+            return
+
+        resolved_path = output_path.resolve()
+        self.status_var.set(f"Saved {resolved_path.name} to {resolved_path.parent}")
+        messagebox.showinfo("toebees", f"Generated {resolved_path}")
+
+
+def launch_gui():
+    root = tk.Tk()
+    ttk.Style(root).theme_use("vista")
+    ToebeesGUI(root)
+    root.mainloop()
+
+
+def main():
+    if "--cli" in sys.argv:
+        run_cli()
+        return
+
+    try:
+        launch_gui()
+    except tk.TclError:
+        run_cli()
+
+
+if __name__ == "__main__":
+    main()
