@@ -1,9 +1,11 @@
+import ctypes
 import json
 from pathlib import Path
 import random
 import re
 import sys
 import tkinter as tk
+import tkinter.font as tkfont
 import traceback
 from tkinter import messagebox, ttk
 
@@ -655,6 +657,51 @@ def run_cli():
     print("\n")
 
 
+def enable_windows_dpi_awareness():
+    if sys.platform != "win32":
+        return
+
+    try:
+        ctypes.windll.shcore.SetProcessDpiAwareness(1)
+        return
+    except (AttributeError, OSError):
+        pass
+
+    try:
+        ctypes.windll.user32.SetProcessDPIAware()
+    except (AttributeError, OSError):
+        pass
+
+
+def configure_gui_scaling(root):
+    default_font = tkfont.nametofont("TkDefaultFont")
+    default_font.configure(size=14)
+
+    text_font = tkfont.nametofont("TkTextFont")
+    text_font.configure(size=14)
+
+    fixed_font = tkfont.nametofont("TkFixedFont")
+    fixed_font.configure(size=14)
+
+    heading_font = tkfont.nametofont("TkHeadingFont")
+    heading_font.configure(size=15, weight="bold")
+
+    caption_font = tkfont.nametofont("TkCaptionFont")
+    caption_font.configure(size=13)
+
+    menu_font = tkfont.nametofont("TkMenuFont")
+    menu_font.configure(size=14)
+
+    style = ttk.Style(root)
+    style.configure(".", font=(default_font.actual("family"), 14))
+    style.configure("TButton", padding=(10, 8))
+    style.configure("TRadiobutton", padding=(2, 4))
+    style.configure("TLabelframe.Label", font=(heading_font.actual("family"), 15, "bold"))
+    style.configure("TEntry", padding=(8, 6))
+    style.configure("CipherName.TLabel", font=(default_font.actual("family"), 13))
+    style.configure("Adjust.TButton", padding=(6, 3))
+
+
 class ToebeesGUI:
     def __init__(self, root):
         self.root = root
@@ -709,7 +756,7 @@ class ToebeesGUI:
             text="Regional",
             value="cregional",
             variable=self.category_var,
-        ).grid(row=1, column=0, sticky="w", pady=(6, 0))
+        ).grid(row=0, column=2, sticky="w", padx = 20, pady=(6, 0))
 
         preset_frame = ttk.LabelFrame(controls_frame, text="Presets", padding=12)
         preset_frame.grid(row=0, column=1, sticky="nsew", padx=(8, 0))
@@ -728,14 +775,14 @@ class ToebeesGUI:
         for index, code in enumerate(codes):
             column = 0 if index < midpoint else 1
             row = index if index < midpoint else index - midpoint
-            row_frame = ttk.Frame(list_frame, padding=(0, 4))
+            row_frame = ttk.Frame(list_frame, padding=(0, 3))
             row_frame.grid(row=row, column=column, sticky="ew", padx=(0, 16) if column == 0 else (16, 0))
             row_frame.columnconfigure(1, weight=1)
 
-            ttk.Label(row_frame, text=CIPHER_LABELS[code]).grid(row=0, column=1, sticky="w")
-            ttk.Button(row_frame, text="-", width=3, command=lambda current=code: self.adjust_count(current, -1)).grid(row=0, column=2, padx=(8, 4))
+            ttk.Label(row_frame, text=CIPHER_LABELS[code], style="CipherName.TLabel").grid(row=0, column=1, sticky="w")
+            ttk.Button(row_frame, text="-", width=3, style="Adjust.TButton", command=lambda current=code: self.adjust_count(current, -1)).grid(row=0, column=2, padx=(8, 4))
             ttk.Label(row_frame, textvariable=self.count_vars[code], width=4, anchor="center").grid(row=0, column=3)
-            ttk.Button(row_frame, text="+", width=3, command=lambda current=code: self.adjust_count(current, 1)).grid(row=0, column=4, padx=(4, 0))
+            ttk.Button(row_frame, text="+", width=3, style="Adjust.TButton", command=lambda current=code: self.adjust_count(current, 1)).grid(row=0, column=4, padx=(4, 0))
 
         actions_frame = ttk.Frame(container)
         actions_frame.grid(row=3, column=0, sticky="ew", pady=(12, 0))
@@ -789,8 +836,11 @@ class ToebeesGUI:
 
 
 def launch_gui():
+    enable_windows_dpi_awareness()
     root = tk.Tk()
-    ttk.Style(root).theme_use("vista")
+    style = ttk.Style(root)
+    style.theme_use("vista")
+    configure_gui_scaling(root)
     ToebeesGUI(root)
     root.mainloop()
 
